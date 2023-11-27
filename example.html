@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JS Loki Logger Example</title>
+</head>
+<body>
+<script src="js-loki-logger.js"></script>
+<script>
+    // Init Loki Logger
+    LokiLogger({
+        url: "http://localhost:63342/api/prom/push",
+        labels: {
+            env: "development",
+            app: "js-loki-logger-example"
+        },
+        flushInterval: 10000,
+        logLevel: 'debug' // debug / info / warn / error
+    });
+
+    // Test logs
+    console.log('test log');
+    console.log('test log 2');
+    console.error('test error');
+    console.error('test error 2');
+    console.warn('test warn');
+    console.warn('test warn 2');
+    console.debug('test debug');
+    console.debug('test debug 2');
+</script>
+</body>
+</html>
