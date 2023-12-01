@@ -9,7 +9,7 @@
  *         env: 'development',
  *         app: 'js-loki-logger-example'
  *     },
- *     flushInterval: 10000,
+ *     batchInterval: 10000,
  *     logLevel: 'debug'
  * });
  */
@@ -28,8 +28,8 @@
                 env: 'development',
                 app: 'js-loki-logger-example'
             },
-            flushInterval: 10000, // Flush interval in milliseconds
-            logLevel: 'debug' // One of debug, info, warn, error
+            batchInterval: 10000, // Batch interval (milliseconds)
+            logLevel: 'debug' // Log level (debug/info/warn/error)
         };
         let entries = [];
 
@@ -115,8 +115,8 @@
         }
 
         // Flush logs on interval
-        if (!window.lokiFlushInterval) {
-            window.lokiFlushInterval = setInterval(async () => await _flush(), options.flushInterval);
+        if (!window.lokibatchInterval) {
+            window.lokibatchInterval = setInterval(async () => await _flush(), options.batchInterval);
         }
     };
 })(window);
