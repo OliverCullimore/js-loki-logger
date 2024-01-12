@@ -25,8 +25,12 @@
         const defaultOptions = {
             url: 'http://loki/api/prom/push', // Loki URL
             labels: {
-                env: 'development',
-                app: 'js-loki-logger-example'
+                job: "js-console-logs",
+                ip: _getPublicIP(),
+                host: window.location.host !== undefined ? window.location.host : '',
+                url: window.location.href !== undefined ? window.location.href : '',
+                referrer: document.referrer !== undefined ? document.referrer : '',
+                user_agent: window.navigator.userAgent !== undefined ? window.navigator.userAgent : ''
             },
             batchInterval: 10000, // Batch interval (milliseconds)
             logLevel: 'debug' // Log level (debug/info/warn/error)
@@ -35,6 +39,16 @@
 
         // Configure options
         options = {...defaultOptions, ...options};
+
+        // Get public ip
+        const _getPublicIP = async () => {
+            try {
+                let res = await fetch("https://checkip.amazonaws.com/");
+                return await res.text();
+            } catch (error) {
+                console.error(error);
+            }
+        }
 
         // Flush log entries to Loki
         const _flush = async () => {

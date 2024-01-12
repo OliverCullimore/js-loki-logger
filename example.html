@@ -6,15 +6,9 @@
 <body>
 <script src="js-loki-logger.js"></script>
 <script>
-    // Init Loki Logger
+    // Init Loki Logger using default options
     LokiLogger({
-        url: "http://loki/api/prom/push",
-        labels: {
-            env: "development",
-            app: "js-loki-logger-example"
-        },
-        batchInterval: 10000, // Batch interval (milliseconds)
-        logLevel: 'debug' // Log level (debug/info/warn/error)
+        url: "http://loki/api/prom/push"
     });
 
     // Test logs
