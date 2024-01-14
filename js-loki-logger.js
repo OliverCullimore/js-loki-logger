@@ -13,18 +13,11 @@
  *         user_agent: window.navigator.userAgent !== undefined ? window.navigator.userAgent : ''
  *     }, // optional
  *     batchInterval: 10000, // optional (milliseconds)
- *     logLevel: 'debug' // optional (debug/info/warn/error)
  * });
  */
 (function (window, undefined) {
     window.LokiLogger = function (options) {
         // Set defaults
-        const logLevel = {
-            'debug': 0,
-            'info': 1,
-            'warn': 2,
-            'error': 3
-        };
         const defaultOptions = {
             url: 'http://LOKI_HOSTNAME/loki/api/v1/push', // Loki URL
             labels: {
@@ -35,7 +28,6 @@
                 user_agent: window.navigator.userAgent !== undefined ? window.navigator.userAgent : ''
             }, // Labels to send with all log entries
             batchInterval: 10000, // Batch interval (milliseconds)
-            logLevel: 'info' // Log level (debug/info/warn/error)
         };
         let entries = [];
         let lokiReady = false;
@@ -102,47 +94,15 @@
         }
 
         // Log to Loki
-        const log = function (level, line) {
-            // Add to entries if log level allows
-            if (logLevel[options.logLevel] <= level) {
-                entries.push([((new Date()).getTime() * 1000000).toString(), line]);
-            }
+        const log = function (line) {
+            // Add to entries
+            entries.push([((new Date()).getTime() * 1000000).toString(), line]);
         }
 
-        // Override console.log
-        console.defaultLog = console.log.bind(console);
-        console.log = function () {
-            // Output to default console
-            console.defaultLog.apply(console, arguments);
-            // Then log to Loki
-            log(logLevel.info, `INFO: ${Array.from(arguments)}`);
-        }
-
-        // Override console.error
-        console.defaultError = console.error.bind(console);
-        console.error = function () {
-            // Output to default console
-            console.defaultError.apply(console, arguments);
-            // Then log to Loki
-            log(logLevel.error, `ERROR: ${Array.from(arguments)}`);
-        }
-
-        // Override console.warn
-        console.defaultWarn = console.warn.bind(console);
-        console.warn = function () {
-            // Output to default console
-            console.defaultWarn.apply(console, arguments);
-            // Then log to Loki
-            log(logLevel.warn, `WARN: ${Array.from(arguments)}`);
-        }
-
-        // Override console.debug
-        console.defaultDebug = console.debug.bind(console);
-        console.debug = function () {
-            // Output to default console
-            console.defaultDebug.apply(console, arguments);
-            // Then log to Loki
-            log(logLevel.debug, `DEBUG: ${Array.from(arguments)}`);
+        // Listen for window.onerror events
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            log(`ERROR: ${msg} ${url} ${lineNo}:${columnNo} ${error}`);
+            return false;
         }
 
         // Flush logs on interval
