@@ -4,13 +4,16 @@
  *
  * @example
  * LokiLogger({
- *     url: 'http://localhost:63342/api/prom/push',
+ *     url: 'http://LOKI_HOSTNAME/loki/api/v1/push', // required (Loki push URL)
  *     labels: {
- *         env: 'development',
- *         app: 'js-loki-logger-example'
- *     },
- *     batchInterval: 10000,
- *     logLevel: 'debug'
+ *         job: "browser-console-logs",
+ *         host: window.location.host !== undefined ? window.location.host : '',
+ *         url: window.location.href !== undefined ? window.location.href : '',
+ *         referrer: document.referrer !== undefined ? document.referrer : '',
+ *         user_agent: window.navigator.userAgent !== undefined ? window.navigator.userAgent : ''
+ *     }, // optional
+ *     batchInterval: 10000, // optional (milliseconds)
+ *     logLevel: 'debug' // optional (debug/info/warn/error)
  * });
  */
 (function (window, undefined) {
@@ -23,30 +26,40 @@
             'error': 3
         };
         const defaultOptions = {
-            url: 'http://loki/api/prom/push', // Loki URL
+            url: 'http://LOKI_HOSTNAME/loki/api/v1/push', // Loki URL
             labels: {
-                job: "js-console-logs",
-                ip: _getPublicIP(),
+                job: "browser-console-logs",
                 host: window.location.host !== undefined ? window.location.host : '',
                 url: window.location.href !== undefined ? window.location.href : '',
                 referrer: document.referrer !== undefined ? document.referrer : '',
                 user_agent: window.navigator.userAgent !== undefined ? window.navigator.userAgent : ''
-            },
+            }, // Labels to send with all log entries
             batchInterval: 10000, // Batch interval (milliseconds)
-            logLevel: 'debug' // Log level (debug/info/warn/error)
+            logLevel: 'info' // Log level (debug/info/warn/error)
         };
         let entries = [];
+        let lokiReady = false;
 
         // Configure options
         options = {...defaultOptions, ...options};
 
-        // Get public ip
-        const _getPublicIP = async () => {
-            try {
-                let res = await fetch("https://checkip.amazonaws.com/");
-                return await res.text();
-            } catch (error) {
-                console.error(error);
+        // Check Loki is ready to receive requests
+        const _checkLokiReady = async () => {
+            const {url} = options;
+
+            let xhr = new XMLHttpRequest();
+
+            xhr.open('GET', url.replace('/loki/api/v1/push', '/ready'));
+            xhr.send();
+
+            xhr.onreadystatechange = () => {
+                if (xhr.readyState === 4) {
+                    if (xhr.status !== 200) {
+                        console.debug("Loki not ready: " + xhr.responseText);
+                    } else {
+                        lokiReady = true;
+                    }
+                }
             }
         }
 
@@ -56,13 +69,17 @@
                 return;
             }
 
+            if (!lokiReady) {
+                await _checkLokiReady();
+            }
+
             const {url, labels} = options;
 
             const data = {
                 streams: [
                     {
-                        labels,
-                        entries: [...entries]
+                        stream: labels,
+                        values: [...entries]
                     }
                 ]
             }
@@ -78,7 +95,7 @@
             xhr.onreadystatechange = () => {
                 if (xhr.readyState === 4) {
                     if (xhr.status !== 204) {
-                        console.error(xhr.responseText)
+                        console.error(xhr.responseText);
                     }
                 }
             }
@@ -88,7 +105,7 @@
         const log = function (level, line) {
             // Add to entries if log level allows
             if (logLevel[options.logLevel] <= level) {
-                entries.push({line, ts: (new Date()).toISOString()});
+                entries.push([((new Date()).getTime() * 1000000).toString(), line]);
             }
         }
 

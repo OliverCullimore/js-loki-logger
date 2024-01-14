@@ -4,22 +4,19 @@
 
 Pure Javascript standalone logger for Loki.
 
-## Example Usage
+## Quick Start
 ```html
 <script src="js-loki-logger.js"></script>
 <script>
-    // Init Loki Logger
+    // Init Loki Logger using default options
     LokiLogger({
-        url: "http://LOKI_HOSTNAME/api/prom/push",
-        labels: {
-            env: "development",
-            app: "js-loki-logger-example"
-        },
-        batchInterval: 10000, // Batch interval (milliseconds)
-        logLevel: 'debug' // Log level (debug/info/warn/error)
+        url: 'http://LOKI_HOSTNAME/loki/api/v1/push', // Loki push URL (required)
     });
 </script>
 ```
+
+## Example Usage
+Refer to the [example](/example) folder
 
 ## Credits
 
